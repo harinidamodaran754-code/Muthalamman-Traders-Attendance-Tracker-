@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#176b5b">
+<meta name="description" content="Muthalamman Traders Attendance and Payroll">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Muthalamman Traders — Attendance</title>
+<style>
+:root{--bg:#f5f7f6;--card:#fff;--ink:#17211f;--muted:#66716d;--brand:#176b5b;--brand2:#0e5548;--line:#dfe6e2;--good:#16744f;--warn:#a86100;--danger:#b43a35;--blue:#356aa8;--shadow:0 8px 28px rgba(20,40,35,.08)}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}button,input,select{font:inherit}button{cursor:pointer}
+.app{max-width:760px;margin:auto;min-height:100vh;background:var(--bg);padding-bottom:88px}
+header{position:sticky;top:0;z-index:20;padding:14px 16px 12px;background:rgba(245,247,246,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border-radius:13px;background:var(--brand);display:grid;place-items:center;color:#fff;font-weight:900}.brand h1{font-size:17px;margin:0}.brand p{font-size:11px;color:var(--muted);margin:2px 0 0}
+main{padding:18px 16px}.page-title{font-size:28px;margin:0 0 3px}.subtitle{color:var(--muted);margin:0 0 16px;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.stat,.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}.stat{padding:14px}.stat b{font-size:24px}.stat span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.card{padding:15px;margin-top:12px}.card h3{margin:0 0 11px;font-size:15px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.stack>*+*{margin-top:9px}
+.badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:800}.on{background:#e5f4ec;color:var(--good)}.late{background:#fff0dc;color:var(--warn)}.early{background:#e6f0ff;color:var(--blue)}.leave{background:#eee9ff;color:#6b4ca2}.relieved{background:#eee;color:#666}.danger-badge{background:#f8e7e5;color:var(--danger)}
+.btn{border:0;border-radius:12px;padding:10px 13px;font-weight:800;background:var(--brand);color:#fff}.btn.secondary{background:#edf2ef;color:var(--brand2)}.btn.danger{background:#f8e7e5;color:var(--danger)}.btn.small{padding:7px 9px;font-size:11px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.search{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff;margin-bottom:10px}
+.item{padding:12px 0;border-top:1px solid var(--line)}.item:first-child{border-top:0;padding-top:0}.name{font-weight:800}.muted{color:var(--muted);font-size:12px}.money{font-weight:900}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(760px,100%);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:7px 6px calc(7px + env(safe-area-inset-bottom));z-index:30}nav button{background:none;border:0;color:#78827f;font-size:10px;padding:7px 2px;border-radius:12px}nav button.active{color:var(--brand);background:#edf5f1;font-weight:900}
+.modal{position:fixed;inset:0;background:rgba(10,20,18,.42);display:none;align-items:flex-end;z-index:50}.modal.show{display:flex}.sheet{background:var(--bg);width:min(760px,100%);margin:auto;border-radius:24px 24px 0 0;padding:20px;max-height:90vh;overflow:auto}.sheet h2{margin:0 0 14px}
+label{font-size:11px;color:var(--muted);display:block;margin:10px 0 5px}input,select{width:100%;padding:11px;border:1px solid var(--line);border-radius:11px;background:#fff}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#17211f;color:#fff;padding:10px 14px;border-radius:12px;font-size:12px;display:none;z-index:60;max-width:90%;text-align:center}
+.empty{text-align:center;padding:25px;color:var(--muted)}.section-title{font-size:13px;font-weight:900;margin:18px 0 8px}
+.progress{height:8px;border-radius:99px;background:#edf0ef;overflow:hidden}.progress>i{display:block;height:100%;background:var(--brand)}
+.notice{padding:11px 12px;border-radius:13px;background:#edf5f1;color:var(--brand2);font-size:12px}
+@media(min-width:700px){main{padding:24px}.grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="brand"><div class="logo">MT</div><div><h1>Muthalamman Traders</h1><p>Attendance & Payroll • Admin</p></div><div style="margin-left:auto;display:flex;gap:6px">
+<button class="btn secondary small" onclick="openSettings()">⚙</button>
+<button class="btn secondary small" onclick="signOut()">↪</button>
+</div><button id="installBtn" class="btn secondary small" style="margin-left:auto;display:none" onclick="installPWA()">Install</button></div></header>
+<main id="main"></main>
+<nav id="nav">
+<button data-page="home">⌂<br>Dashboard</button><button data-page="people">♙<br>People</button><button data-page="attendance">◷<br>Attendance</button><button data-page="leave">▣<br>Leave</button><button data-page="payroll">₹<br>Payroll</button>
+</nav>
+</div>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+
+/* ===== SUPABASE CONNECTION LAYER =====
+   Paste your Project URL and Publishable/anon key in Settings.
+   The app can still work locally when Supabase is not configured.
+*/
+const MT_SUPABASE_CONFIG_KEY="mt_supabase_config_v1";
+let mtSb=null, mtOnline=false;
+function getSbConfig(){
+  try{return JSON.parse(localStorage.getItem(MT_SUPABASE_CONFIG_KEY))||{url:"",key:""}}
+  catch(e){return {url:"",key:""}}
+}
+function setSbConfig(url,key){
+  localStorage.setItem(MT_SUPABASE_CONFIG_KEY,JSON.stringify({url:(url||"").trim(),key:(key||"").trim()}));
+}
+async function connectSupabase(){
+  const c=getSbConfig();
+  if(!c.url||!c.key||!window.supabase)return false;
+  try{
+    mtSb=window.supabase.createClient(c.url,c.key);
+    const {error}=await mtSb.from("employees").select("id").limit(1);
+    if(error) throw error;
+    mtOnline=true; return true;
+  }catch(e){mtOnline=false; return false}
+}
+async function sbSelect(table,orderCol){
+  if(!mtOnline)return null;
+  const q=mtSb.from(table).select("*");
+  const {data,error}=orderCol?q.order(orderCol):await q;
+  if(error)throw error; return data||[];
+}
+async function syncFromSupabase(){
+  if(!mtOnline)return false;
+  const [employees,attendance,leaves,audit,settings]=await Promise.all([
+    sbSelect("employees","id"),sbSelect("attendance","attendance_date"),
+    sbSelect("leave_requests","id"),sbSelect("audit_logs","id"),sbSelect("app_settings","id")
+  ]);
+  state.employees=(employees||[]).map(e=>({
+    id:e.id,name:e.name,role:e.role,dept:e.department,salary:Number(e.monthly_salary||0),
+    status:e.status,in:String(e.check_in_time||"09:00").slice(0,5),
+    out:String(e.check_out_time||"18:00").slice(0,5),
+    late:0,leave:0
+  }));
+  state.attendance=(attendance||[]).map(a=>({
+    id:a.id,e:a.employee_id,date:a.attendance_date,
+    in:a.check_in?String(a.check_in).slice(0,5):"",out:a.check_out?String(a.check_out).slice(0,5):"",
+    overrideStatus:a.override_status,overrideReason:a.override_reason
+  }));
+  state.leaves=(leaves||[]).map(l=>({
+    id:l.id,e:l.employee_id,from:l.from_date,to:l.to_date,reason:l.reason||"",
+    status:l.status,prior:!!l.prior_informed
+  }));
+  state.audit=(audit||[]).map(a=>({id:a.id,at:a.created_at,action:a.action,employee:a.employee_id,reason:a.reason}));
+  if(settings&&settings[0]){
+    state.settings={grace:settings[0].grace_minutes,early:settings[0].early_minutes,
+      lateThreshold:settings[0].late_threshold,latePercent:Number(settings[0].late_percent)};
+  }
+  recalcLateCounts(); saveLocal();
+  return true;
+}
+function recalcLateCounts(){
+  state.employees.forEach(e=>{
+    e.late=state.attendance.filter(a=>a.e===e.id&&a.in&&statusFor(e,a.in)[0]==="Late"&&!a.overrideStatus).length;
+    e.leave=state.leaves.filter(l=>l.e===e.id&&l.status==="Approved").length;
+  });
+}
+function saveLocal(){localStorage.setItem(KEY,JSON.stringify(state))}
+async function sbUpsert(table,row,onConflict){
+  if(!mtOnline)return;
+  const {error}=await mtSb.from(table).upsert(row,onConflict?{onConflict}:undefined);
+  if(error)throw error;
+}
+async function sbDelete(table,col,val){
+  if(!mtOnline)return;
+  const {error}=await mtSb.from(table).delete().eq(col,val);
+  if(error)throw error;
+}
+async function saveEmployeeToSb(e){
+  await sbUpsert("employees",{id:e.id,name:e.name,role:e.role,department:e.dept,
+    monthly_salary:e.salary,status:e.status,check_in_time:e.in,check_out_time:e.out},"id");
+}
+async function saveAttendanceToSb(a){
+  await sbUpsert("attendance",{employee_id:a.e,attendance_date:a.date,check_in:a.in||null,
+    check_out:a.out||null,status:a.overrideStatus||null,difference_minutes:a.in?statusFor(emp(a.e),a.in)[1]:0,
+    override_status:a.overrideStatus||null,override_reason:a.overrideReason||null},"employee_id,attendance_date");
+}
+async function saveLeaveToSb(l){
+  await sbUpsert("leave_requests",{id:l.id,employee_id:l.e,from_date:l.from,to_date:l.to,
+    reason:l.reason,status:l.status,prior_informed:l.prior||false},"id");
+}
+async function saveAuditToSb(a){
+  await mtSb.from("audit_logs").insert({action:a.action,employee_id:a.employee,reason:a.reason||null});
+}
+function syncError(e){console.error(e);toast("Saved locally. Supabase sync needs checking.");}
+const KEY="mt_attendance_v2";
+const seed={
+ page:"home",month:new Date().toISOString().slice(0,7),
+ settings:{grace:10,early:30,lateThreshold:5,latePercent:10},
+ employees:[
+ {id:"MT001",name:"Employee A",role:"Warehouse Lead",dept:"Operations",salary:28500,status:"Active",in:"09:00",out:"18:00"},
+ {id:"MT002",name:"Employee B",role:"Sales Staff",dept:"Sales",salary:30000,status:"Active",in:"09:30",out:"18:30"},
+ {id:"MT003",name:"Employee C",role:"Accounts",dept:"Finance",salary:25000,status:"Active",in:"10:00",out:"19:00"},
+ {id:"MT004",name:"Employee D",role:"Store Staff",dept:"Operations",salary:28000,status:"Active",in:"08:30",out:"17:30"},
+ {id:"MT005",name:"Employee E",role:"Former Staff",dept:"Sales",salary:27000,status:"Relieved",in:"09:00",out:"18:00"}],
+ attendance:[],leaves:[],audit:[]
+};
+let state=load();
+window.addEventListener("load", initAuth);
+const $=s=>document.querySelector(s), emp=id=>state.employees.find(x=>x.id===id);
+function cloneSeed(){return JSON.parse(JSON.stringify(seed))}
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||cloneSeed()}catch(e){return cloneSeed()}}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function today(){return new Date().toISOString().slice(0,10)}
+function mins(t){let [h,m]=String(t).split(":").map(Number);return h*60+m}
+function statusFor(e,tin){
+ if(!tin)return ["Absent",0,"relieved"];
+ let d=mins(tin)-mins(e.in);
+ if(d<=-state.settings.early)return ["Early",Math.abs(d),"early"];
+ if(d<=state.settings.grace)return ["On Time",Math.max(0,d),"on"];
+ return ["Late",d,"late"];
+}
+function money(n){return "₹"+Number(n||0).toLocaleString("en-IN")}
+function toast(t){let x=$("#toast");x.textContent=t;x.style.display="block";clearTimeout(window.tt);window.tt=setTimeout(()=>x.style.display="none",2200)}
+function openModal(html){$("#sheet").innerHTML=html;$("#modal").classList.add("show")}
+function closeModal(){$("#modal").classList.remove("show")}
+$("#modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+function render(){
+ applyRoleUI();
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===state.page));
+ const views={home:dashboard,people:people,attendance:attendance,leave:leave,payroll:payroll};
+ $("#main").innerHTML=views[state.page]();
+}
+
+/* ===== AUTHENTICATION + ROLES ===== */
+let mtUser=null, mtRole=null, mtProfile=null;
+function loginScreen(message=""){
+  document.body.innerHTML=`<div style="min-height:100vh;display:grid;place-items:center;padding:20px;background:#f5f7f6">
+  <div class="card" style="width:min(430px,100%);margin:0;padding:22px">
+    <div class="brand"><div class="logo">MT</div><div><h1>Muthalamman Traders</h1><p>Secure Attendance & Payroll</p></div></div>
+    <div style="height:16px"></div>
+    <h2 style="margin:0 0 5px">Sign in</h2><p class="muted">Admin and employee access</p>
+    ${message?`<div class="notice" style="margin:12px 0">${message}</div>`:""}
+    <details style="margin:12px 0"><summary style="font-weight:800;cursor:pointer">First-time setup: Supabase connection</summary>
+    <label>Project URL</label><input id="cfgUrl" value="${getSbConfig().url}" placeholder="https://xxxxx.supabase.co">
+    <label>Publishable / anon key</label><input id="cfgKey" value="${getSbConfig().key}" placeholder="sb_publishable_...">
+    <button class="btn secondary small" style="margin-top:8px" onclick="saveLoginConfig()">Save connection</button>
+    </details>
+    <label>Email</label><input id="authEmail" type="email" placeholder="name@example.com">
+    <label>Password</label><input id="authPassword" type="password" placeholder="Password">
+    <div class="actions" style="margin-top:14px"><button class="btn" onclick="signIn()">Sign in</button><button class="btn secondary" onclick="signUp()">Create account</button></div>
+    <p class="muted" style="margin-top:14px">For first setup, create one account, then promote it to Admin using the supplied SQL.</p>
+  </div></div>`;
+}
+function saveLoginConfig(){
+  const url=$("#cfgUrl")?.value,key=$("#cfgKey")?.value;
+  if(!url||!key)return toast("Enter Project URL and Publishable/anon key");
+  setSbConfig(url,key); toast("Connection saved"); setTimeout(initAuth,300);
+}
+async function initAuth(){
+  const c=getSbConfig();
+  if(!c.url||!c.key){loginScreen("Enter your Supabase Project URL and Publishable/anon key above.");return}
+  if(!window.supabase){loginScreen("Supabase library could not load.");return}
+  mtSb=window.supabase.createClient(c.url,c.key);
+  const {data,error}=await mtSb.auth.getSession();
+  if(error){loginScreen(error.message);return}
+  if(data.session){await afterLogin(data.session.user);return}
+  loginScreen();
+  mtSb.auth.onAuthStateChange(async(_event,session)=>{
+    if(session) await afterLogin(session.user);
+    else loginScreen();
+  });
+}
+async function signIn(){
+  const email=$("#authEmail")?.value.trim(), password=$("#authPassword")?.value;
+  if(!email||!password)return toast("Enter email and password");
+  const {data,error}=await mtSb.auth.signInWithPassword({email,password});
+  if(error)return toast(error.message);
+  await afterLogin(data.user);
+}
+async function signUp(){
+  const email=$("#authEmail")?.value.trim(), password=$("#authPassword")?.value;
+  if(!email||password.length<6)return toast("Use an email and a password of 6+ characters");
+  const {data,error}=await mtSb.auth.signUp({email,password});
+  if(error)return toast(error.message);
+  toast(data.session?"Account created":"Check your email to confirm the account");
+}
+async function afterLogin(user){
+  mtUser=user;
+  const {data:profile,error}=await mtSb.from("user_profiles").select("*").eq("user_id",user.id).maybeSingle();
+  if(error){loginScreen("Database security setup is not complete: "+error.message);return}
+  if(!profile){loginScreen("Your account has no app profile yet. Run the security SQL supplied with this app.");return}
+  mtProfile=profile; mtRole=profile.role;
+  if(mtRole==="admin"||mtRole==="manager"){
+    await syncFromSupabase(); recalcLateCounts();
+  }else{
+    await syncEmployeeData();
+  }
+  render();
+}
+async function syncEmployeeData(){
+  if(!mtUser||!mtProfile)return;
+  const eid=mtProfile.employee_id;
+  if(!eid)return;
+  const {data:e}=await mtSb.from("employees").select("id,name,role,department,status,check_in_time,check_out_time").eq("id",eid).maybeSingle();
+  if(e){
+    state.employees=[{id:e.id,name:e.name,role:e.role,dept:e.department,salary:0,status:e.status,
+      in:String(e.check_in_time||"09:00").slice(0,5),out:String(e.check_out_time||"18:00").slice(0,5),late:0,leave:0}];
+  }
+  const {data:a}=await mtSb.from("attendance").select("*").eq("employee_id",eid).order("attendance_date",{ascending:false});
+  state.attendance=(a||[]).map(x=>({id:x.id,e:x.employee_id,date:x.attendance_date,in:x.check_in?String(x.check_in).slice(0,5):"",out:x.check_out?String(x.check_out).slice(0,5):"",overrideStatus:x.override_status,overrideReason:x.override_reason}));
+  const {data:l}=await mtSb.from("leave_requests").select("*").eq("employee_id",eid).order("id",{ascending:false});
+  state.leaves=(l||[]).map(x=>({id:x.id,e:x.employee_id,from:x.from_date,to:x.to_date,reason:x.reason||"",status:x.status,prior:!!x.prior_informed}));
+}
+function isAdmin(){return mtRole==="admin"||mtRole==="manager"}
+async function signOut(){await mtSb.auth.signOut();location.reload()}
+function applyRoleUI(){
+  const nav=document.querySelectorAll("#nav button");
+  nav.forEach(b=>{
+    const adminOnly=["home","people","payroll"].includes(b.dataset.page);
+    b.style.display=(!isAdmin()&&adminOnly)?"none":"block";
+  });
+  if(!isAdmin() && ["home","people","payroll"].includes(state.page)) state.page="attendance";
+}
+
+function dashboard(){
+ let active=state.employees.filter(e=>e.status==="Active"), d=today(), rec=state.attendance.filter(a=>a.date===d);
+ let present=rec.filter(a=>a.in).length, late=rec.filter(a=>a.in&&statusFor(emp(a.e),a.in)[0]==="Late").length;
+ let pending=state.leaves.filter(x=>x.status==="Pending").length;
+ let rows=rec.map(a=>{let e=emp(a.e);if(!e)return "";let s=statusFor(e,a.in);return `<div class="item row"><div><div class="name">${e.name}</div><div class="muted">${a.in} → ${a.out||"—"} · ${s[0]}${s[1]?` ${s[1]}m`:""}</div></div><span class="badge ${s[2]}">${a.overrideStatus||s[0]}</span></div>`}).join("");
+ return `<h2 class="page-title">Good morning 👋</h2><p class="subtitle">${new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"short",year:"numeric"})} · ${active.length} active employees</p>
+ <div class="grid"><div class="stat"><b>${present}/${active.length}</b><span>Present today</span></div><div class="stat"><b>${late}</b><span>Late today</span></div><div class="stat"><b>${rec.filter(a=>a.in&&statusFor(emp(a.e),a.in)[0]==="Early").length}</b><span>Early today</span></div><div class="stat"><b>${pending}</b><span>Pending leave</span></div></div>
+ <div class="card"><div class="row"><h3>Today's attendance</h3><button class="btn small secondary" onclick="go('attendance')">View all</button></div>${rows||'<div class="empty">No check-ins today.</div>'}</div>
+ <div class="card"><h3>Payroll watch</h3>${active.map(e=>{let groups=Math.floor((e.late||0)/state.settings.lateThreshold),pct=groups*state.settings.latePercent;let progress=Math.min(100,((e.late||0)%state.settings.lateThreshold)/state.settings.lateThreshold*100);return `<div class="item"><div class="row"><div><div class="name">${e.name}</div><div class="muted">${e.late||0}/${state.settings.lateThreshold} counted lates</div></div><b>${pct?pct+"%":"₹0"}</b></div><div class="progress" style="margin-top:7px"><i style="width:${progress}%"></i></div></div>`}).join("")}</div>
+ <div class="card"><h3>Quick actions</h3><div class="actions"><button class="btn" onclick="openAdd()">+ Add employee</button><button class="btn secondary" onclick="openCheckin()">+ Check in</button><button class="btn secondary" onclick="go('leave')">Review leave</button></div></div>`;
+}
+function people(){
+ return `<h2 class="page-title">People</h2><p class="subtitle">Active and relieved employees</p><input class="search" placeholder="Search name, ID or role" oninput="filterPeople(this.value)"><div id="peopleList">${peopleList(state.employees)}</div>`;
+}
+function peopleList(list){return list.map(e=>`<div class="card" style="margin-top:10px"><div class="row"><div><div class="name">${e.name}</div><div class="muted">${e.id} · ${e.role} · ${e.dept}</div></div><span class="badge ${e.status==="Active"?"on":"relieved"}">${e.status}</span></div><div class="item row"><div><div class="muted">Schedule</div><div>${e.in} – ${e.out} · Grace ${state.settings.grace}m</div></div><div class="money">${money(e.salary)}</div></div><div class="actions"><button class="btn small" onclick="profile('${e.id}')">Profile</button>${e.status==="Active"?`<button class="btn small secondary" onclick="editEmployee('${e.id}')">Edit</button><button class="btn small danger" onclick="relieve('${e.id}')">Relieve</button>`:""}</div></div>`}).join("")||'<div class="empty">No employees found.</div>'}
+function filterPeople(q){let x=q.toLowerCase();$("#peopleList").innerHTML=peopleList(state.employees.filter(e=>(e.name+" "+e.id+" "+e.role).toLowerCase().includes(x)))}
+function profile(id){let e=emp(id),groups=Math.floor((e.late||0)/state.settings.lateThreshold),pct=groups*state.settings.latePercent,ded=e.salary*pct/100;openModal(`<h2>${e.name}</h2><p class="muted">${e.id} · ${e.role} · ${e.dept}</p><div class="card"><h3>Work schedule</h3><div class="row"><span>${e.in} – ${e.out}</span><span class="badge on">Grace ${state.settings.grace}m</span></div></div><div class="card"><h3>Salary</h3><div class="row"><span>Monthly</span><b>${money(e.salary)}</b></div><div class="row"><span>Counted lates</span><b>${e.late||0}</b></div><div class="row"><span>Late deduction</span><b>${pct}% · ${money(ded)}</b></div></div><div class="actions"><button class="btn" onclick="editEmployee('${id}')">Edit employee</button><button class="btn secondary" onclick="closeModal()">Close</button></div>`)}
+function attendance(){
+ let active=state.employees.filter(e=>e.status==="Active"), d=today();
+ return `<h2 class="page-title">Attendance</h2><p class="subtitle">${d} · Individual schedules apply</p><div class="actions"><button class="btn" onclick="openCheckin()">+ Check in / out</button><button class="btn secondary" onclick="exportAttendance()">Export CSV</button></div><div class="card"><h3>Rules</h3><div class="muted">Early ≥ ${state.settings.early} min before schedule · On Time through +${state.settings.grace} min · Late after grace</div></div><div class="card"><h3>Today's register</h3>${active.map(e=>{let a=state.attendance.find(x=>x.e===e.id&&x.date===d);if(!a)return `<div class="item row"><div><div class="name">${e.name}</div><div class="muted">Scheduled ${e.in} · No check-in</div></div><span class="badge relieved">Absent</span></div>`;let s=statusFor(e,a.in);return `<div class="item row"><div><div class="name">${e.name}</div><div class="muted">Scheduled ${e.in} · In ${a.in} · Out ${a.out||"—"}</div></div><div><span class="badge ${s[2]}">${a.overrideStatus||s[0]}${s[1]?` · ${s[1]}m`:""}</span>${s[0]==="Late"&&!a.overrideStatus?`<br><button class="btn small secondary" style="margin-top:5px" onclick="overrideLate('${e.id}')">Override</button>`:""}</div></div>`}).join("")}</div>`;
+}
+function openCheckin(){let active=state.employees.filter(e=>e.status==="Active");openModal(`<h2>Attendance entry</h2><label>Employee</label><select id="ce">${active.map(e=>`<option value="${e.id}">${e.name} (${e.id})</option>`).join("")}</select><label>Date</label><input id="cd" type="date" value="${today()}"><label>Check-in</label><input id="ci" type="time" value="${new Date().toTimeString().slice(0,5)}"><label>Check-out (optional)</label><input id="co" type="time"><div class="actions" style="margin-top:14px"><button class="btn" onclick="saveAttendance()">Save</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>`)}
+function saveAttendance(){let e=emp($("#ce").value),d=$("#cd").value,t=$("#ci").value,a=state.attendance.find(x=>x.e===e.id&&x.date===d);if(!t)return toast("Check-in time is required");if(a){a.in=t;a.out=$("#co").value||a.out||""}else state.attendance.push({e:e.id,date:d,in:t,out:$("#co").value||""});e.late=(state.attendance.filter(a=>a.e===e.id&&a.in&&statusFor(e,a.in)[0]==="Late").length);save(); if(mtOnline) saveAttendanceToSb(a).catch(syncError); toast("Attendance saved");closeModal();render()}
+function overrideLate(id){let e=emp(id),a=state.attendance.find(x=>x.e===id&&x.date===today());if(!a)return;let s=statusFor(e,a.in);openModal(`<h2>Attendance override</h2><p><b>${e.name}</b> · ${s[0]} by ${s[1]} minutes.</p><label>New status</label><select id="ov"><option>Excused</option><option>On Time</option></select><label>Reason</label><input id="reason" placeholder="Reason for override"><div class="actions" style="margin-top:14px"><button class="btn" onclick="saveOverride('${id}')">Save override</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>`)}
+function saveOverride(id){let a=state.attendance.find(x=>x.e===id&&x.date===today());let reason=$("#reason").value.trim();if(!reason)return toast("Reason is required");a.override=true;a.overrideStatus=$("#ov").value;a.overrideReason=reason;state.audit.push({at:new Date().toISOString(),action:"Attendance override",employee:id,reason});save(); if(mtOnline){saveAttendanceToSb(a).catch(syncError); saveAuditToSb(state.audit[state.audit.length-1]).catch(syncError)} toast("Override saved and audited");closeModal();render()}
+function leave(){
+ return `<h2 class="page-title">Leave</h2><p class="subtitle">Requests and approvals</p><div class="actions"><button class="btn" onclick="openLeave()">+ Request leave</button></div><div class="card"><h3>Requests</h3>${state.leaves.map(l=>{let e=emp(l.e);return `<div class="item"><div class="row"><div><div class="name">${e?e.name:l.e}</div><div class="muted">${l.from} → ${l.to} · ${l.reason||"No reason"}</div></div><span class="badge ${l.status==="Approved"?"on":l.status==="Pending"?"late":"relieved"}">${l.status}</span></div>${l.prior?`<div class="muted" style="margin-top:6px">✓ Prior informed · approved leave = ₹0 deduction</div>`:""}${l.status==="Pending"?`<div class="actions" style="margin-top:9px"><button class="btn small" onclick="approveLeave(${l.id})">Approve</button><button class="btn small danger" onclick="rejectLeave(${l.id})">Reject</button></div>`:""}</div>`}).join("")||'<div class="empty">No leave requests.</div>'}</div>`;
+}
+function openLeave(){openModal(`<h2>Request leave</h2><label>Employee</label><select id="le">${state.employees.filter(e=>e.status==="Active").map(e=>`<option value="${e.id}">${e.name}</option>`).join("")}</select><label>From</label><input id="lf" type="date"><label>To</label><input id="lt" type="date"><label>Reason</label><input id="lr" placeholder="Reason"><label>Prior informed</label><select id="lp"><option value="true">Yes</option><option value="false">No</option></select><div class="actions" style="margin-top:14px"><button class="btn" onclick="addLeave()">Submit</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>`)}
+function addLeave(){let from=$("#lf").value,to=$("#lt").value;if(!from||!to||to<from)return toast("Enter valid leave dates");state.leaves.push({id:Date.now(),e:$("#le").value,from,to,reason:$("#lr").value,status:"Pending",prior:$("#lp").value==="true"});save(); if(mtOnline) saveLeaveToSb(state.leaves[state.leaves.length-1]).catch(syncError); toast("Leave request added");closeModal();render()}
+function approveLeave(id){let l=state.leaves.find(x=>x.id===id);l.status="Approved";state.audit.push({at:new Date().toISOString(),action:"Leave approved",employee:l.e});save(); if(mtOnline){saveLeaveToSb(l).catch(syncError); saveAuditToSb(state.audit[state.audit.length-1]).catch(syncError)} toast("Leave approved · no salary deduction");render()}
+function rejectLeave(id){let l=state.leaves.find(x=>x.id===id);l.status="Rejected";state.audit.push({at:new Date().toISOString(),action:"Leave rejected",employee:l.e});save(); if(mtOnline){saveLeaveToSb(l).catch(syncError); saveAuditToSb(state.audit[state.audit.length-1]).catch(syncError)} toast("Leave rejected");render()}
+function payroll(){let active=state.employees.filter(e=>e.status==="Active");return `<h2 class="page-title">Payroll</h2><p class="subtitle">${state.month} · Draft calculation</p><div class="actions"><button class="btn secondary" onclick="exportPayroll()">Export CSV</button></div><div class="card"><h3>Monthly payroll</h3>${active.map(e=>{let late=e.late||0,groups=Math.floor(late/state.settings.lateThreshold),pct=groups*state.settings.latePercent,d=e.salary*pct/100,net=e.salary-d;return `<div class="item"><div class="row"><div><div class="name">${e.name}</div><div class="muted">${late} counted lates · ${pct}% deduction</div></div><div class="money">${money(net)}</div></div><div class="muted" style="margin-top:5px">Basic ${money(e.salary)} · Late deduction ${money(d)} · Approved leave ₹0 deduction</div></div>`}).join("")}</div><div class="card"><h3>Rule</h3><p class="muted">Every complete ${state.settings.lateThreshold} counted lates in the month = ${state.settings.latePercent}% of that month's salary. Excused lates do not count.</p></div>`}
+function openAdd(){if(!isAdmin())return toast("Admin access required");openEmployeeForm()}
+function editEmployee(id){if(!isAdmin())return toast("Admin access required");closeModal();openEmployeeForm(id)}
+function openEmployeeForm(id){let e=id?emp(id):{name:"",role:"Staff",dept:"Operations",salary:0,in:"09:00",out:"18:00"};openModal(`<h2>${id?"Edit employee":"Add employee"}</h2><label>Name</label><input id="en" value="${e.name}"><label>Designation</label><input id="er" value="${e.role}"><label>Department</label><input id="ed" value="${e.dept}"><label>Monthly salary</label><input id="es" type="number" value="${e.salary}"><label>Check-in</label><input id="ei" type="time" value="${e.in}"><label>Check-out</label><input id="eo" type="time" value="${e.out}"><div class="actions" style="margin-top:14px"><button class="btn" onclick="saveEmployee('${id||""}')">${id?"Save changes":"Add employee"}</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>`)}
+function saveEmployee(id){if(!isAdmin())return toast("Admin access required");let name=$("#en").value.trim();if(!name)return toast("Name is required");if(id){let e=emp(id);Object.assign(e,{name,role:$("#er").value||"Staff",dept:$("#ed").value||"Operations",salary:Number($("#es").value)||0,in:$("#ei").value,out:$("#eo").value})}else{let n=state.employees.length+1;let newid="MT"+String(n).padStart(3,"0");while(emp(newid)){n++;newid="MT"+String(n).padStart(3,"0")}state.employees.push({id:newid,name,role:$("#er").value||"Staff",dept:$("#ed").value||"Operations",salary:Number($("#es").value)||0,status:"Active",in:$("#ei").value,out:$("#eo").value})}save(); if(mtOnline) saveEmployeeToSb(id?e:state.employees[state.employees.length-1]).catch(syncError); toast(id?"Employee updated":"Employee added");closeModal();render()}
+function relieve(id){if(!isAdmin())return toast("Admin access required");let e=emp(id);if(confirm(`Mark ${e.name} as relieved? History will be retained.`)){e.status="Relieved";state.audit.push({at:new Date().toISOString(),action:"Employee relieved",employee:id});save(); if(mtOnline){saveEmployeeToSb(e).catch(syncError); saveAuditToSb(state.audit[state.audit.length-1]).catch(syncError)} toast("Employee marked as relieved");render()}}
+
+function openSettings(){
+  let c=getSbConfig();
+  openModal(`<h2>App settings</h2>
+  <div class="notice"><b>Connection:</b> ${mtOnline?"🟢 Supabase connected":"🟡 Local mode"}<br><span class="muted">Your key stays in this browser's local storage.</span></div>
+  <label>Supabase Project URL</label><input id="surl" value="${c.url}" placeholder="https://xxxxx.supabase.co">
+  <label>Publishable / anon key</label><input id="skey" value="${c.key}" placeholder="sb_publishable_...">
+  <div class="actions" style="margin-top:14px">
+    <button class="btn" onclick="saveSettings()">Connect & sync</button>
+    <button class="btn secondary" onclick="closeModal()">Close</button>
+  </div>
+  <div class="card"><h3>Payroll rules</h3>
+  <div class="muted">Grace ${state.settings.grace}m · Early ${state.settings.early}m · ${state.settings.lateThreshold} lates = ${state.settings.latePercent}% deduction</div></div>`);
+}
+async function saveSettings(){
+  const url=$("#surl").value,key=$("#skey").value;
+  if(!url||!key)return toast("Enter both Supabase values");
+  setSbConfig(url,key);
+  if(await connectSupabase()){
+    try{await syncFromSupabase();closeModal();render();toast("Supabase connected")}catch(e){syncError(e)}
+  }else toast("Connection failed — check URL/key and tables");
+}
+
+function csv(rows){let s=rows.map(r=>r.map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(",")).join("\n");let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([s],{type:"text/csv"}));a.download="muthalamman-export.csv";a.click()}
+function exportAttendance(){csv([["Employee ID","Employee","Date","Check In","Check Out","Status"],...state.attendance.map(a=>{let e=emp(a.e),s=e&&a.in?statusFor(e,a.in):["Absent"];return [a.e,e?.name,a.date,a.in,a.out,a.overrideStatus||s[0]]})]);}
+function exportPayroll(){if(!isAdmin())return toast("Admin access required");csv([["Employee ID","Employee","Basic Salary","Counted Lates","Deduction %","Deduction","Net Salary"],...state.employees.filter(e=>e.status==="Active").map(e=>{let g=Math.floor((e.late||0)/state.settings.lateThreshold),p=g*state.settings.latePercent,d=e.salary*p/100;return [e.id,e.name,e.salary,e.late||0,p,d,e.salary-d]})]);}
+function go(p){state.page=p;render()}
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)));
+render();
+</script>
+
+<script>
+let deferredInstallPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault(); deferredInstallPrompt=e;
+  const b=document.getElementById("installBtn"); if(b)b.style.display="block";
+});
+async function installPWA(){
+  if(!deferredInstallPrompt){toast("Use your browser menu → Add to Home screen");return}
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt=null;
+  const b=document.getElementById("installBtn"); if(b)b.style.display="none";
+}
+window.addEventListener("appinstalled",()=>{
+  const b=document.getElementById("installBtn"); if(b)b.style.display="none";
+  toast("App installed on this device");
+});
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+}
+</script>
+
+</body>
+</html>
