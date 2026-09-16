@@ -154,7 +154,31 @@ let state=load();
 window.addEventListener("load", initAuth);
 const $=s=>document.querySelector(s), emp=id=>state.employees.find(x=>x.id===id);
 function cloneSeed(){return JSON.parse(JSON.stringify(seed))}
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||cloneSeed()}catch(e){return cloneSeed()}}
+function load(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(KEY)||"null");
+    if(!saved || typeof saved!=="object") return cloneSeed();
+
+    const validPages=["home","people","attendance","leave","payroll"];
+
+    return {
+      ...cloneSeed(),
+      ...saved,
+      page:validPages.includes(saved.page) ? saved.page : "home",
+      settings:{
+        ...cloneSeed().settings,
+        ...(saved.settings||{})
+      },
+      employees:Array.isArray(saved.employees) ? saved.employees : cloneSeed().employees,
+      attendance:Array.isArray(saved.attendance) ? saved.attendance : [],
+      leaves:Array.isArray(saved.leaves) ? saved.leaves : [],
+      audit:Array.isArray(saved.audit) ? saved.audit : []
+    };
+  }catch(e){
+    localStorage.removeItem(KEY);
+    return cloneSeed();
+  }
+     }
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
 function today(){return new Date().toISOString().slice(0,10)}
 function mins(t){let [h,m]=String(t).split(":").map(Number);return h*60+m}
@@ -171,10 +195,25 @@ function openModal(html){$("#sheet").innerHTML=html;$("#modal").classList.add("s
 function closeModal(){$("#modal").classList.remove("show")}
 $("#modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
 function render(){
- applyRoleUI();
- document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===state.page));
- const views={home:dashboard,people:people,attendance:attendance,leave:leave,payroll:payroll};
- $("#main").innerHTML=views[state.page]();
+  const views={
+    home:dashboard,
+    people,
+    attendance,
+    leave,
+    payroll
+  };
+
+  if(!views[state.page]){
+    state.page="home";
+  }
+
+  applyRoleUI();
+
+  document.querySelectorAll("nav button").forEach(b=>{
+    b.classList.toggle("active",b.dataset.page===state.page);
+  });
+
+  $("#main").innerHTML=views[state.page]();
 }
 
 /* ===== AUTHENTICATION + ROLES ===== */
